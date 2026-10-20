@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Moderation & Safety Analytics — SafePath AI{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js 4.4 CDN for Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-warning-subtle text-warning fw-bold px-3 py-1 rounded-pill mb-1">
+        <i class="fa-solid fa-lock me-1"></i>Restricted Access
+      </span>
+      <h2 class="fw-bold mb-0">Safety Moderation & Analytics Center</h2>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('hazards.safety_map_page') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-map me-1"></i>View Public Map
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Overview Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card sp-card p-3 shadow-sm border-start border-primary border-4">
+        <span class="text-muted small fw-bold">TOTAL REPORTS</span>
+        <div class="fs-3 fw-bold text-dark mt-1">{{ total_reports }}</div>
+        <div class="small text-muted mt-1">All-time community submissions</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card sp-card p-3 shadow-sm border-start border-warning border-4">
+        <span class="text-muted small fw-bold">PENDING REVIEW</span>
+        <div class="fs-3 fw-bold text-warning mt-1">{{ pending_count }}</div>
+        <div class="small text-muted mt-1">Requires moderator action</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card sp-card p-3 shadow-sm border-start border-success border-4">
+        <span class="text-muted small fw-bold">VERIFIED HAZARDS</span>
+        <div class="fs-3 fw-bold text-success mt-1">{{ verified_count }}</div>
+        <div class="small text-muted mt-1">Active in corridor risk scoring</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card sp-card p-3 shadow-sm border-start border-danger border-4">
+        <span class="text-muted small fw-bold">REJECTED / SPAM</span>
+        <div class="fs-3 fw-bold text-danger mt-1">{{ rejected_count }}</div>
+        <div class="small text-muted mt-1">Excluded from public scoring</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Charts Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card sp-card p-4 shadow-sm h-100">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Reports by Hazard Category</h5>
+        <div style="height: 260px; position: relative;">
+          <canvas id="adminCategoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card sp-card p-4 shadow-sm h-100">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-bar text-success me-2"></i>Moderation Status Distribution</h5>
+        <div style="height: 260px; position: relative;">
+          <canvas id="adminStatusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moderation Queue Table -->
+  <div class="card sp-card p-4 shadow-sm mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+      <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check text-warning me-2"></i>Hazard Moderation Queue</h5>
+      
+      <!-- Filters -->
+      <div class="d-flex gap-2">
+        <select id="adminStatusFilter" class="form-select form-select-sm" style="width: auto;">
+          <option value="">All Statuses</option>
+          <option value="pending" selected>Pending Review</option>
+          <option value="verified">Verified Only</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select id="adminCategoryFilter" class="form-select form-select-sm" style="width: auto;">
+          <option value="">All Categories</option>
+          {% for key, cat in categories.items() %}
+            <option value="{{ key }}">{{ cat.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle small mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Hazard & Description</th>
+            <th>Severity</th>
+            <th>Location / Reporter</th>
+            <th>Photo</th>
+            <th>Status</th>
+            <th>Moderation Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminReportsTableBody">
+          <!-- Populated by admin.js -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Audit Log Section -->
+  <div class="card sp-card p-4 shadow-sm">
+    <h5 class="fw-bold mb-3"><i class="fa-solid fa-clipboard-list text-info me-2"></i>Moderation Audit Trail</h5>
+    {% if logs %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle small text-muted mb-0">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Moderator</th>
+              <th>Report ID</th>
+              <th>Action Taken</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in logs %}
+              <tr>
+                <td>{{ l.created_at.strftime('%Y-%m-%d %H:%M') if l.created_at else '' }}</td>
+                <td class="text-dark fw-semibold">{{ l.admin_name }}</td>
+                <td><span class="badge bg-light text-dark border">#{{ l.report_id }}</span></td>
+                <td><span class="badge bg-secondary">{{ l.action }}</span></td>
+                <td>{{ l.notes or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted small mb-0">No moderation actions recorded in audit log yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Photo Viewer Modal -->
+<div class="modal fade" id="adminPhotoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="fa-solid fa-image me-1"></i>Uploaded Hazard Photograph</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-3">
+        <img id="adminPhotoModalImg" src="" class="img-fluid rounded border" alt="Hazard Photo" />
+        <p class="small text-muted mt-2 mb-0">
+          <i class="fa-solid fa-lock text-success me-1"></i>All EXIF camera and GPS metadata was stripped upon server reception.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <!-- User Profile Summary Sidebar -->
+    <div class="col-lg-4">
+      <div class="card sp-card p-4 shadow-sm text-center mb-4">
+        <div class="rounded-circle bg-primary-subtle text-primary fw-bold mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; font-size: 1.8rem;">
+          {{ current_user.name[:1].upper() }}
+        </div>
+        <h4 class="fw-bold mb-1">{{ current_user.name }}</h4>
+        <p class="text-muted small mb-3">{{ current_user.email }}</p>
+
+        <div class="d-flex justify-content-around border-top border-bottom py-2 mb-3 small text-muted">
+          <div>
+            <strong class="d-block text-dark fs-5">{{ reports|length }}</strong>
+            <span>Reports</span>
+          </div>
+          <div>
+            <strong class="d-block text-dark fs-5">{{ contacts|length }}</strong>
+            <span>Contacts</span>
+          </div>
+          <div>
+            <strong class="d-block text-dark fs-5">{{ shares|length }}</strong>
+            <span>SOS Signals</span>
+          </div>
+        </div>
+
+        {% if current_user.is_admin %}
+          <div class="mb-3">
+            <span class="badge bg-warning text-dark"><i class="fa-solid fa-shield-halved me-1"></i>Verified Administrator</span>
+          </div>
+        {% endif %}
+
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('emergency.emergency_page') }}" class="btn btn-sm btn-outline-danger">
+            <i class="fa-solid fa-life-ring me-1"></i>Open Emergency Center
+          </a>
+        </div>
+      </div>
+
+      <!-- Privacy & Account Controls -->
+      <div class="card sp-card p-4 shadow-sm">
+        <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-user-shield me-2"></i>Privacy Controls</h6>
+        <p class="small text-muted mb-3">
+          Manage your personal data retention or permanently remove your profile and contacts.
+        </p>
+        <form action="{{ url_for('auth.delete_account') }}" method="POST" onsubmit="return confirm('WARNING: This will permanently delete your account, saved contacts, and private profile data. Proceed?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+            <i class="fa-solid fa-trash me-1"></i>Delete My Account
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Content Column -->
+    <div class="col-lg-8">
+      <!-- Trusted Contacts Section -->
+      <div class="card sp-card p-4 shadow-sm mb-4" id="contacts">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2"></i>My Trusted Contacts</h5>
+          <button class="btn btn-sm btn-primary-teal" data-bs-toggle="modal" data-bs-target="#addContactModal">
+            <i class="fa-solid fa-plus me-1"></i>Add Contact
+          </button>
+        </div>
+
+        {% if contacts %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Channel</th>
+                  <th>Contact Info</th>
+                  <th class="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in contacts %}
+                  <tr id="contact-row-{{ c.id }}">
+                    <td class="fw-semibold">{{ c.contact_name }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ c.contact_method }}</span></td>
+                    <td class="font-monospace">{{ c.contact_value }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteTrustedContact({{ c.id }})" title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted small">
+            <i class="fa-solid fa-address-book fs-3 mb-2 d-block"></i>
+            No emergency contacts added yet. Configure contacts to automatically receive your location in SOS events.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- My Submitted Reports Section -->
+      <div class="card sp-card p-4 shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-bullhorn text-warning me-2"></i>My Submitted Hazard Reports</h5>
+          <a href="{{ url_for('hazards.report_hazard_page') }}" class="btn btn-sm btn-outline-primary">
+            <i class="fa-solid fa-plus me-1"></i>New Report
+          </a>
+        </div>
+
+        {% if reports %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in reports %}
+                  <tr>
+                    <td>
+                      {% set cat_info = categories.get(r.category, {}) %}
+                      <span class="badge bg-light text-dark border">
+                        <i class="fa-solid {{ cat_info.get('icon', 'fa-circle-info') }} me-1"></i>
+                        {{ cat_info.get('label', r.category) }}
+                      </span>
+                    </td>
+                    <td>{{ r.description[:45] }}{% if r.description|length > 45 %}...{% endif %}</td>
+                    <td>
+                      {% if r.severity == 'high' %}
+                        <span class="badge bg-danger">High</span>
+                      {% elif r.severity == 'medium' %}
+                        <span class="badge bg-warning text-dark">Medium</span>
+                      {% else %}
+                        <span class="badge bg-info text-dark">Low</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if r.verification_status == 'verified' %}
+                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Verified</span>
+                      {% elif r.verification_status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Pending</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-muted">{{ r.created_at.strftime('%b %d, %Y') if r.created_at else '' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted small">
+            <i class="fa-solid fa-flag fs-3 mb-2 d-block"></i>
+            You haven't submitted any hazard reports yet. Spot a broken light or road damage? Help the community by submitting a report!
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Recent Emergency Share Sessions -->
+      <div class="card sp-card p-4 shadow-sm">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-tower-broadcast text-danger me-2"></i>Emergency Sharing Sessions</h5>
+        {% if shares %}
+          <div class="list-group list-group-flush small">
+            {% for s in shares %}
+              <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="fw-semibold">Signal #{{ s.id }}</span>
+                  <span class="text-muted ms-2">({{ s.current_lat|round(4) }}, {{ s.current_lng|round(4) }})</span>
+                  <div class="text-muted" style="font-size: 0.8rem;">
+                    Created: {{ s.created_at.strftime('%Y-%m-%d %H:%M') if s.created_at else '' }}
+                  </div>
+                </div>
+                <div>
+                  {% if s.is_active %}
+                    <span class="badge bg-danger me-2">Active</span>
+                    <button class="btn btn-xs btn-outline-danger" onclick="revokeShareById({{ s.id }})">Revoke</button>
+                  {% elif s.revoked_at %}
+                    <span class="badge bg-secondary">Revoked</span>
+                  {% else %}
+                    <span class="badge bg-light text-muted border">Expired</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No past SOS shares recorded.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div class="modal fade" id="addContactModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-primary me-2"></i>Add Trusted Contact</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="addContactForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Full Name / Relationship</label>
+            <input type="text" id="contactNameInput" class="form-control" placeholder="e.g. Sarah Mercer (Sister)" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Notification Channel</label>
+            <select id="contactMethodSelect" class="form-select">
+              <option value="phone" selected>Phone / SMS</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Phone Number or Email</label>
+            <input type="text" id="contactValueInput" class="form-control" placeholder="+1 (555) 234-5678" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary-teal">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/emergency.js') }}"></script>
+<script>
+  function revokeShareById(shareId) {
+    if (!confirm("Revoke this emergency sharing session immediately?")) return;
+    fetch("/api/emergency/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ share_id: shareId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Session revoked.");
+        window.location.reload();
+      } else {
+        alert(data.error || "Failed to revoke.");
+      }
+    });
+  }
+</script>
+{% endblock %}

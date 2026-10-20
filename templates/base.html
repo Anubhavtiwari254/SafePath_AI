@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SafePath AI — Intelligent Safety Routing & Hazard Intelligence{% endblock %}</title>
+  <meta name="description" content="SafePath AI helps travelers find routes using safety intelligence, report community hazards, and access trusted emergency assistance.">
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Leaflet 1.9.4 CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  
+  <!-- Custom SafePath Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-safepath sticky-top">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-logo" href="{{ url_for('main.index') }}" id="navBrandLogo">
+        <div class="logo-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <span>SafePath <span style="color: var(--teal-light);">AI</span></span>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#safepathNavbar" aria-controls="safepathNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="safepathNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == url_for('main.index') %}active{% endif %}" href="{{ url_for('main.index') }}">
+              <i class="fa-solid fa-house me-1"></i>Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == url_for('routes.route_finder_page') %}active{% endif %}" href="{{ url_for('routes.route_finder_page') }}">
+              <i class="fa-solid fa-route me-1"></i>Safe Route Finder
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == url_for('hazards.safety_map_page') %}active{% endif %}" href="{{ url_for('hazards.safety_map_page') }}">
+              <i class="fa-solid fa-map-location-dot me-1"></i>Safety Map
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == url_for('hazards.report_hazard_page') %}active{% endif %}" href="{{ url_for('hazards.report_hazard_page') }}">
+              <i class="fa-solid fa-bullhorn me-1"></i>Report Hazard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-danger fw-bold {% if request.path == url_for('emergency.emergency_page') %}active{% endif %}" href="{{ url_for('emergency.emergency_page') }}">
+              <i class="fa-solid fa-life-ring me-1"></i>Emergency SOS
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == url_for('main.about') %}active{% endif %}" href="{{ url_for('main.about') }}">
+              <i class="fa-solid fa-circle-info me-1"></i>About & Risk Model
+            </a>
+          </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-2">
+          {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+              <a href="{{ url_for('admin.admin_dashboard_page') }}" class="btn btn-sm btn-outline-warning">
+                <i class="fa-solid fa-shield me-1"></i>Admin Panel
+              </a>
+            {% endif %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm btn-outline-light-custom">
+              <i class="fa-solid fa-user me-1"></i>{{ current_user.name.split(' ')[0] }}
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-light-custom">
+              <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Sign In
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-primary-teal">
+              Get Started
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash Messages Banner -->
+  <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if error_title %}
+      <div class="text-center py-5">
+        <h2 class="display-6 fw-bold text-danger">{{ error_title }}</h2>
+        <p class="lead text-muted">{{ error_message }}</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary-teal mt-3">Return to Safety Hub</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Persistent Floating SOS Button -->
+  <a href="{{ url_for('emergency.emergency_page') }}" class="floating-sos-btn" id="floatingSosButton" title="Activate Instant Emergency SOS">
+    <i class="fa-solid fa-tower-broadcast fa-fade"></i>
+    <span>SOS EMERGENCY</span>
+  </a>
+
+  <!-- Main Body Content -->
+  <main class="flex-grow-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Modern SafePath Footer -->
+  <footer class="footer-safepath">
+    <div class="container">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="logo-badge" style="width: 32px; height: 32px; font-size: 1rem;">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span class="brand-font fw-bold text-white fs-5">SafePath <span style="color: var(--teal-light);">AI</span></span>
+          </div>
+          <p class="small text-muted mb-3">
+            Community-powered safety navigation and explainable route-risk intelligence. Helping pedestrians, cyclists, and commuters make safer journeys every day.
+          </p>
+          <div class="small text-warning">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+            <strong>Safety Notice:</strong> Safety scores are explainable estimates based on community reports and are not a substitute for emergency services or individual alertness.
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 col-6">
+          <h6 class="text-white fw-bold mb-3">Platform</h6>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            <li><a href="{{ url_for('routes.route_finder_page') }}">Safe Route Finder</a></li>
+            <li><a href="{{ url_for('hazards.safety_map_page') }}">Unsafe Area Map</a></li>
+            <li><a href="{{ url_for('hazards.report_hazard_page') }}">Report Hazard</a></li>
+            <li><a href="{{ url_for('emergency.emergency_page') }}">Emergency SOS</a></li>
+            <li><a href="{{ url_for('main.about') }}">About System</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 col-6">
+          <h6 class="text-white fw-bold mb-3">Account & Data</h6>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            {% if current_user.is_authenticated %}
+              <li><a href="{{ url_for('main.dashboard') }}">Personal Dashboard</a></li>
+              <li><a href="{{ url_for('main.dashboard') }}#contacts">Trusted Contacts</a></li>
+              <li><a href="{{ url_for('auth.logout') }}">Sign Out</a></li>
+            {% else %}
+              <li><a href="{{ url_for('auth.login') }}">User Sign In</a></li>
+              <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('main.about') }}#privacy">Privacy Policy</a></li>
+            <li><a href="{{ url_for('main.about') }}#moderation">Community Rules</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+          <h6 class="text-white fw-bold mb-3">Immediate Emergency Hotlines</h6>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <div class="p-2 rounded bg-dark border border-secondary">
+                <span class="text-muted d-block">Police / Emergency</span>
+                <strong class="text-danger fs-6"><i class="fa-solid fa-phone me-1"></i>112 / 911</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-dark border border-secondary">
+                <span class="text-muted d-block">Medical / Ambulance</span>
+                <strong class="text-danger fs-6"><i class="fa-solid fa-phone me-1"></i>112 / 108</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-dark border border-secondary">
+                <span class="text-muted d-block">Women Helpline</span>
+                <strong class="text-warning fs-6"><i class="fa-solid fa-phone me-1"></i>1091 / 181</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded bg-dark border border-secondary">
+                <span class="text-muted d-block">Fire Rescue</span>
+                <strong class="text-danger fs-6"><i class="fa-solid fa-phone me-1"></i>112 / 101</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-top border-secondary pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small">
+        <p class="mb-0">&copy; {{ current_year }} SafePath AI. Open source safety intelligence.</p>
+        <p class="mb-0">Powered by Leaflet, OpenStreetMap, OSRM & Flask.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5.3 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Leaflet 1.9.4 JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- Common Map Logic -->
+  <script src="{{ url_for('static', filename='js/map_common.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

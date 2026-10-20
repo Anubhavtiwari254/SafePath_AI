@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Report an Unsafe Place — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4 justify-content-center">
+    <div class="col-lg-10">
+      <div class="card sp-card p-4 p-md-5 shadow-sm">
+        <div class="mb-4">
+          <span class="badge bg-warning-subtle text-warning fw-semibold px-3 py-2 rounded-pill mb-2">
+            <i class="fa-solid fa-bullhorn me-1"></i>Community Incident Reporting
+          </span>
+          <h2 class="fw-bold">Report an Unsafe Place or Hazard</h2>
+          <p class="text-muted">
+            Your report alerts fellow commuters and feeds into our explainable safe route finder. All reports undergo moderation.
+          </p>
+        </div>
+
+        <form action="{{ url_for('hazards.report_hazard_page') }}" method="POST" enctype="multipart/form-data" id="reportHazardForm">
+          <!-- Hidden Coordinates -->
+          <input type="hidden" name="latitude" id="latitudeInput" value="28.6315" required>
+          <input type="hidden" name="longitude" id="longitudeInput" value="77.2167" required>
+
+          <div class="row g-4">
+            <!-- Left Side: Interactive Map Location Picker -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">
+                <i class="fa-solid fa-location-dot text-danger me-1"></i>Select Hazard Location on Map
+              </label>
+              <div class="small text-muted mb-2">
+                Click anywhere on the map or drag the red pin to mark the exact hazard location:
+              </div>
+
+              <div class="card p-1 border mb-2" style="height: 320px;">
+                <div id="reportMap" style="width: 100%; height: 100%;"></div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="reportCurrentLocationBtn">
+                  <i class="fa-solid fa-crosshairs me-1"></i>Pin My Location
+                </button>
+                <span class="small text-muted">Drag pin to refine</span>
+              </div>
+
+              <div class="p-2 bg-light rounded border small">
+                <strong class="d-block text-muted">Selected Location:</strong>
+                <span id="selectedAddressPreview" class="text-dark">Connaught Place, New Delhi (28.6315, 77.2167)</span>
+              </div>
+            </div>
+
+            <!-- Right Side: Incident Details -->
+            <div class="col-md-6">
+              <!-- Category -->
+              <div class="mb-3">
+                <label class="form-label fw-bold"><i class="fa-solid fa-list me-1 text-primary"></i>Incident Category</label>
+                <select name="category" class="form-select" required>
+                  <option value="" disabled selected>Select category...</option>
+                  {% for key, cat in categories.items() %}
+                    <option value="{{ key }}">{{ cat.label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Severity -->
+              <div class="mb-3">
+                <label class="form-label fw-bold"><i class="fa-solid fa-gauge-high me-1 text-warning"></i>Severity Assessment</label>
+                <div class="d-flex gap-2">
+                  <div class="form-check form-check-inline flex-fill m-0">
+                    <input class="btn-check" type="radio" name="severity" id="sevLow" value="low">
+                    <label class="btn btn-outline-info w-100 py-2" for="sevLow">
+                      <i class="fa-solid fa-circle-info d-block mb-1"></i>Low Concern
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline flex-fill m-0">
+                    <input class="btn-check" type="radio" name="severity" id="sevMedium" value="medium" checked>
+                    <label class="btn btn-outline-warning w-100 py-2" for="sevMedium">
+                      <i class="fa-solid fa-triangle-exclamation d-block mb-1"></i>Medium Risk
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline flex-fill m-0">
+                    <input class="btn-check" type="radio" name="severity" id="sevHigh" value="high">
+                    <label class="btn btn-outline-danger w-100 py-2" for="sevHigh">
+                      <i class="fa-solid fa-skull-crossbones d-block mb-1"></i>High Hazard
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Date & Time -->
+              <div class="mb-3">
+                <label class="form-label fw-bold"><i class="fa-regular fa-clock me-1 text-secondary"></i>Date & Time of Incident</label>
+                <input type="datetime-local" name="incident_datetime" id="incidentDatetimeInput" class="form-control" value="">
+              </div>
+
+              <!-- Description -->
+              <div class="mb-3">
+                <label class="form-label fw-bold"><i class="fa-solid fa-pen-to-square me-1 text-secondary"></i>Incident Description</label>
+                <textarea name="description" class="form-control" rows="3" placeholder="Describe the hazard clearly (e.g. Broken streetlights along 200m walkway, completely dark after sunset)..." minlength="8" maxlength="1000" required></textarea>
+                <div class="form-text small">Minimum 8 characters. Do not include sensitive personal names.</div>
+              </div>
+
+              <!-- Optional Photo Upload -->
+              <div class="mb-3">
+                <label class="form-label fw-bold"><i class="fa-solid fa-camera me-1 text-secondary"></i>Optional Photo Proof</label>
+                <input type="file" name="photo" id="photoInput" class="form-control" accept="image/png,image/jpeg,image/webp">
+                <div class="form-text text-muted small">
+                  <i class="fa-solid fa-lock text-success me-1"></i>Privacy: Camera and GPS EXIF metadata are stripped upon upload.
+                </div>
+                <!-- Thumbnail Preview -->
+                <div id="photoPreviewContainer" class="mt-2 text-center d-none">
+                  <img id="photoPreview" src="" class="img-thumbnail rounded" style="max-height: 120px;" alt="Upload Preview">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-top pt-4 mt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div class="text-muted small">
+              <i class="fa-solid fa-shield-check text-primary me-1"></i>
+              Community reports are marked as <em>pending review</em> until verified by moderators or corroborated by confirmations.
+            </div>
+            <button type="submit" class="btn btn-primary-teal btn-lg px-4 text-nowrap">
+              <i class="fa-solid fa-paper-plane me-2"></i>Submit Community Report
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/report_hazard.js') }}"></script>
+<script>
+  // Set default datetime to local current time
+  document.addEventListener("DOMContentLoaded", function() {
+    const dtInput = document.getElementById("incidentDatetimeInput");
+    if (dtInput) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      dtInput.value = now.toISOString().slice(0, 16);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}About & Explainable Safety Intelligence — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <!-- Title & Mission Header -->
+      <div class="mb-5">
+        <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-2">
+          <i class="fa-solid fa-scale-balanced me-1"></i>System Documentation & Methodology
+        </span>
+        <h1 class="display-6 fw-bold">About SafePath AI & Our Explainable Safety Model</h1>
+        <p class="lead text-muted">
+          SafePath AI is designed to help pedestrians, cyclists, and commuters make informed navigation choices by blending OpenStreetMap road networks with community-reported safety hazards.
+        </p>
+      </div>
+
+      <!-- Core Objective -->
+      <div class="card sp-card p-4 p-md-5 mb-5 shadow-sm border-0">
+        <h3 class="fw-bold mb-3"><i class="fa-solid fa-bullseye text-primary me-2"></i>Core Mission & Ethics</h3>
+        <p class="text-secondary">
+          Our core objective is to empower citizens with actionable, transparent environmental safety information. We believe personal safety technology must be:
+        </p>
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3 h-100 border">
+              <strong class="d-block mb-1 text-dark"><i class="fa-solid fa-eye text-info me-1"></i>Explainable</strong>
+              <span class="small text-muted">Every deduction on a route shows exact distances, report severities, and timestamps. No uninterpretable neural black boxes.</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3 h-100 border">
+              <strong class="d-block mb-1 text-dark"><i class="fa-solid fa-user-lock text-success me-1"></i>Privacy-First</strong>
+              <span class="small text-muted">Uploaded photos have EXIF GPS tags stripped. Emergency share tokens are hashed, short-lived, and revocable at any moment.</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3 h-100 border">
+              <strong class="d-block mb-1 text-dark"><i class="fa-solid fa-scale-balanced text-warning me-1"></i>Accountable</strong>
+              <span class="small text-muted">Clear distinction between verified consensus and unverified pending reports. Moderation audit logs track all actions.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explainable Scoring Engine Detailed Formula -->
+      <div class="card sp-card p-4 p-md-5 mb-5 shadow-sm">
+        <h3 class="fw-bold mb-3"><i class="fa-solid fa-square-root-variable text-primary me-2"></i>Explainable Route-Risk Scoring Formula</h3>
+        <p class="text-secondary">
+          Routes are evaluated along a <strong>250-meter corridor buffer</strong> using the following documented weighted mathematical model:
+        </p>
+
+        <div class="p-3 bg-dark text-white rounded-3 font-monospace small mb-4">
+          SafetyScore = max(5.0, min(100.0, 100 - &sum; [ BasePenalty &times; SeverityMult &times; ProximityMult &times; RecencyMult &times; VerificationMult ]))
+        </div>
+
+        <h5 class="fw-bold mb-3">Model Weight Parameters:</h5>
+        
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered align-middle small">
+            <thead class="table-light">
+              <tr>
+                <th>Factor</th>
+                <th>Condition / Category</th>
+                <th>Weight / Multiplier</th>
+                <th>Rationale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="7" class="fw-bold">1. Hazard Category (Base Penalty)</td>
+                <td>Harassment or Threatening Behavior</td>
+                <td><span class="badge bg-danger">24 pts</span></td>
+                <td>Highest direct personal vulnerability risk.</td>
+              </tr>
+              <tr>
+                <td>Suspicious Activity</td>
+                <td><span class="badge bg-danger">20 pts</span></td>
+                <td>Immediate environmental concern requiring avoidance.</td>
+              </tr>
+              <tr>
+                <td>Isolated or Poorly Monitored Areas</td>
+                <td><span class="badge bg-purple text-white">16 pts</span></td>
+                <td>Lack of natural surveillance and escape routes.</td>
+              </tr>
+              <tr>
+                <td>Blocked Roads or Construction</td>
+                <td><span class="badge bg-warning text-dark">14 pts</span></td>
+                <td>Forces pedestrians into vehicular traffic.</td>
+              </tr>
+              <tr>
+                <td>Broken Streetlights</td>
+                <td><span class="badge bg-warning text-dark">12 pts</span></td>
+                <td>Reduces nighttime visibility and situational awareness.</td>
+              </tr>
+              <tr>
+                <td>Road Damage & Potholes</td>
+                <td><span class="badge bg-orange text-white">10 pts</span></td>
+                <td>Physical trip or collision hazard for walkers & cyclists.</td>
+              </tr>
+              <tr>
+                <td>Other Safety Concerns</td>
+                <td><span class="badge bg-info text-dark">8 pts</span></td>
+                <td>General environmental alerts.</td>
+              </tr>
+
+              <tr>
+                <td rowspan="3" class="fw-bold">2. Severity Multiplier</td>
+                <td>High Hazard</td>
+                <td><span class="badge bg-danger">1.6&times;</span></td>
+                <td>Urgent severity multiplier.</td>
+              </tr>
+              <tr>
+                <td>Medium Risk</td>
+                <td><span class="badge bg-warning text-dark">1.0&times;</span></td>
+                <td>Standard baseline multiplier.</td>
+              </tr>
+              <tr>
+                <td>Low Concern</td>
+                <td><span class="badge bg-info text-dark">0.6&times;</span></td>
+                <td>Minor nuisance or low impact.</td>
+              </tr>
+
+              <tr>
+                <td rowspan="3" class="fw-bold">3. Proximity Decay</td>
+                <td>&lt; 50 meters (Direct)</td>
+                <td><span class="badge bg-dark">1.0&times;</span></td>
+                <td>Directly on or immediately adjacent to sidewalk.</td>
+              </tr>
+              <tr>
+                <td>50 – 150 meters (Nearby)</td>
+                <td><span class="badge bg-dark">0.65&times;</span></td>
+                <td>Within line of sight or connecting corner.</td>
+              </tr>
+              <tr>
+                <td>150 – 250 meters (Perimeter)</td>
+                <td><span class="badge bg-dark">0.35&times;</span></td>
+                <td>Corridor edge; partial deterrence.</td>
+              </tr>
+
+              <tr>
+                <td rowspan="4" class="fw-bold">4. Recency Decay</td>
+                <td>&le; 3 days</td>
+                <td><span class="badge bg-success">1.0&times;</span></td>
+                <td>Fresh incident requiring immediate notice.</td>
+              </tr>
+              <tr>
+                <td>4 – 14 days</td>
+                <td><span class="badge bg-secondary">0.8&times;</span></td>
+                <td>Recent hazard, possibly still persistent.</td>
+              </tr>
+              <tr>
+                <td>15 – 30 days</td>
+                <td><span class="badge bg-secondary">0.6&times;</span></td>
+                <td>Gradual decay as repairs or patrols may have occurred.</td>
+              </tr>
+              <tr>
+                <td>&gt; 30 days</td>
+                <td><span class="badge bg-secondary">0.4&times;</span></td>
+                <td>Historical pattern weight.</td>
+              </tr>
+
+              <tr>
+                <td rowspan="2" class="fw-bold">5. Verification</td>
+                <td>Moderator Verified / 3+ Confirmations</td>
+                <td><span class="badge bg-success">1.0&times; &ndash; 1.25&times;</span></td>
+                <td>High confidence level.</td>
+              </tr>
+              <tr>
+                <td>Community Pending</td>
+                <td><span class="badge bg-warning text-dark">0.55&times;</span></td>
+                <td>Prevents unverified single reports from distorting score.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h5 class="fw-bold mb-2">Score Categories:</h5>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <div class="p-3 rounded-3 score-low-risk border">
+              <strong class="d-block mb-1">Lower Reported Risk (80–100)</strong>
+              <span class="small">Minimal or low-severity hazards along the transit corridor.</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3 score-mod-risk border">
+              <strong class="d-block mb-1">Moderate Reported Risk (50–79)</strong>
+              <span class="small">Caution advised; isolated reports or broken infrastructure noted.</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3 score-high-risk border">
+              <strong class="d-block mb-1">Higher Reported Risk (0–49)</strong>
+              <span class="small">Multiple active high-severity hazard reports along the route.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Limitations & Disclaimer -->
+      <div class="card sp-card p-4 p-md-5 mb-5 shadow-sm border-warning border-opacity-50">
+        <h3 class="fw-bold text-dark mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Data Limitations & Important Disclaimers</h3>
+        
+        <div class="alert alert-warning border-0 small mb-3">
+          <strong>Non-Guarantee Notice:</strong> The safety score is an explainable heuristic derived strictly from community-reported data and nearby infrastructure reports. It does <em>not</em> constitute a guarantee of personal safety or an endorsement of any path as risk-free.
+        </div>
+
+        <ul class="text-secondary small mb-0 d-flex flex-column gap-2">
+          <li><strong>No Presumed Safety in Unmapped Areas:</strong> If no community reports exist for a given region, the system flags the corridor as <em>"Insufficient Safety Data"</em> rather than falsely presenting 100/100 safety.</li>
+          <li><strong>No Crime Demographic Profiling:</strong> SafePath AI strictly evaluates specific, reportable environmental hazards (lighting, infrastructure damage, road obstructions, harassment reports). It does not infer neighborhood crime rates or demographic attributes without verified factual data.</li>
+          <li><strong>Not a Substitute for 911 / 112:</strong> This application is a route discovery and peer assistance tool. In an urgent emergency, always contact emergency dispatch services immediately.</li>
+        </ul>
+      </div>
+
+      <!-- Moderation & Privacy Policy -->
+      <div class="card sp-card p-4 p-md-5 shadow-sm" id="moderation">
+        <h3 class="fw-bold mb-3"><i class="fa-solid fa-shield-check text-primary me-2"></i>Community Moderation & Privacy Rules</h3>
+        <p class="text-secondary small mb-3">
+          To maintain trust, prevent harassment, and eliminate malicious spam:
+        </p>
+        <ul class="text-secondary small d-flex flex-column gap-2 mb-0">
+          <li><strong>Photo Privacy:</strong> All user-uploaded images are processed server-side to strip embedded camera hardware serials, location tags, and EXIF GPS metadata.</li>
+          <li><strong>Reporter Privacy:</strong> Public hazard map popups never disclose the identity, username, or profile of the submitting user.</li>
+          <li><strong>Audit Logging:</strong> All moderator approvals, rejections, or severity adjustments are permanently recorded in an administrative audit log.</li>
+          <li><strong>Revocable Location Sharing:</strong> Emergency SOS links use cryptographically random 64-character tokens, stored only as SHA-256 hashes, with strict expiry and instant user revocation.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

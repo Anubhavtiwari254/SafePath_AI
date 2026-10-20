@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}SafePath AI — Your Journey. Your Safety. Our Priority.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white small mb-3 border border-white border-opacity-20">
+          <i class="fa-solid fa-sparkles text-warning"></i>
+          <span>Community-Powered Safety Intelligence</span>
+        </div>
+        <h1 class="hero-title">Your Journey.<br>Your Safety.<br><span style="color: var(--teal-light);">Our Priority.</span></h1>
+        <p class="hero-subtitle">
+          Discover routes, understand reported hazards, and stay connected with the people who matter. Powered by explainable risk-scoring algorithms and real-time community reports.
+        </p>
+
+        <!-- Quick Route Search Bar -->
+        <div class="card p-3 p-md-4 shadow-lg border-0 bg-white text-dark rounded-4 mb-4">
+          <form action="{{ url_for('routes.route_finder_page') }}" method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+              <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i>Starting Point</label>
+              <input type="text" name="origin" class="form-control form-control-lg fs-6" placeholder="e.g. Central Station" value="Central Station" required>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-flag-checkered text-success me-1"></i>Destination</label>
+              <input type="text" name="destination" class="form-control form-control-lg fs-6" placeholder="e.g. India Gate" value="India Gate" required>
+            </div>
+            <div class="col-md-2 d-grid mt-md-4 pt-md-1">
+              <button type="submit" class="btn btn-primary-teal btn-lg fs-6 py-2">
+                <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+              </button>
+            </div>
+          </form>
+          <div class="d-flex flex-wrap gap-2 mt-2 align-items-center small text-muted">
+            <span class="fw-semibold">Quick Demos:</span>
+            <a href="{{ url_for('routes.route_finder_page', origin='Central Station', destination='India Gate') }}" class="badge bg-light text-dark text-decoration-none border">Delhi: Station &rarr; India Gate</a>
+            <a href="{{ url_for('routes.route_finder_page', origin='Times Square', destination='Central Park') }}" class="badge bg-light text-dark text-decoration-none border">NYC: Times Sq &rarr; Central Park</a>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('routes.route_finder_page') }}" class="btn btn-primary-teal btn-lg px-4">
+            <i class="fa-solid fa-route me-2"></i>Find a Safe Route
+          </a>
+          <a href="{{ url_for('hazards.safety_map_page') }}" class="btn btn-outline-light-custom btn-lg px-4">
+            <i class="fa-solid fa-map-location-dot me-2"></i>Explore Safety Map
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <!-- Interactive Live Overview Card -->
+        <div class="card bg-white bg-opacity-10 backdrop-blur border border-white border-opacity-20 rounded-4 p-4 text-white shadow-lg">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 fw-bold"><i class="fa-solid fa-shield-halved text-info me-2"></i>Safety Overview</h5>
+            <span class="badge bg-success"><i class="fa-solid fa-circle text-white me-1" style="font-size: 8px;"></i>System Active</span>
+          </div>
+          
+          <div class="row g-3 text-center mb-3">
+            <div class="col-6">
+              <div class="p-3 rounded-3 bg-black bg-opacity-20 border border-white border-opacity-10">
+                <div class="fs-2 fw-bold" style="color: var(--teal-light);">{{ total_hazards }}</div>
+                <div class="small text-white-50">Community Reports</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded-3 bg-black bg-opacity-20 border border-white border-opacity-10">
+                <div class="fs-2 fw-bold text-success">{{ verified_hazards }}</div>
+                <div class="small text-white-50">Verified Hazards</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-3 bg-black bg-opacity-25 border border-white border-opacity-10 small mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Risk Scoring Intelligence:</span>
+              <span class="text-info fw-semibold">Proximity Weighted</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span>Safety Corridor Buffer:</span>
+              <span class="text-white-50">250 meters</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Emergency Dispatch:</span>
+              <span class="text-success fw-semibold">1-Click Multi-Channel</span>
+            </div>
+          </div>
+
+          <a href="{{ url_for('emergency.emergency_page') }}" class="btn btn-danger-sos w-100 py-2 d-flex justify-content-center align-items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Instant Emergency Center</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature Showcase Section -->
+<section class="py-5">
+  <div class="container py-4">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-2">Core Capabilities</span>
+      <h2 class="display-6 fw-bold">Everything You Need to Navigate with Confidence</h2>
+      <p class="text-muted">SafePath AI merges crowd-sourced safety awareness with explainable path optimization.</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Feature 1: Safe Route Finder -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper bg-primary-subtle text-primary">
+            <i class="fa-solid fa-route"></i>
+          </div>
+          <h4 class="fw-bold mb-2">Safe Route Finder</h4>
+          <p class="text-muted small flex-grow-1">
+            Compare walking, cycling, and driving routes with our 0–100 safety score, nearby hazard counts, and transparent factor breakdowns.
+          </p>
+          <a href="{{ url_for('routes.route_finder_page') }}" class="text-primary fw-semibold text-decoration-none small mt-3">
+            Plan a Safe Route <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 2: Unsafe Area Map -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper bg-warning-subtle text-warning">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+          <h4 class="fw-bold mb-2">Unsafe Area Map</h4>
+          <p class="text-muted small flex-grow-1">
+            Browse interactive map markers for broken streetlights, poorly monitored passages, potholes, and community-reported concerns.
+          </p>
+          <a href="{{ url_for('hazards.safety_map_page') }}" class="text-warning fw-semibold text-decoration-none small mt-3">
+            Explore Safety Map <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 3: Report an Unsafe Place -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper bg-info-subtle text-info">
+            <i class="fa-solid fa-bullhorn"></i>
+          </div>
+          <h4 class="fw-bold mb-2">Report a Hazard</h4>
+          <p class="text-muted small flex-grow-1">
+            Submit hazard reports with map pin placement, category, and optional photos. Image EXIF GPS metadata is automatically stripped for your privacy.
+          </p>
+          <a href="{{ url_for('hazards.report_hazard_page') }}" class="text-info fw-semibold text-decoration-none small mt-3">
+            Submit a Report <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature 4: Emergency SOS -->
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper bg-danger-subtle text-danger">
+            <i class="fa-solid fa-tower-broadcast"></i>
+          </div>
+          <h4 class="fw-bold mb-2">Emergency SOS</h4>
+          <p class="text-muted small flex-grow-1">
+            Activate emergency sharing to generate a time-limited, revocable live tracking link to dispatch to trusted contacts via SMS, WhatsApp, or native share.
+          </p>
+          <a href="{{ url_for('emergency.emergency_page') }}" class="text-danger fw-semibold text-decoration-none small mt-3">
+            Open Emergency Center <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How Explainable Risk Scoring Works -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container py-3">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="badge bg-success-subtle text-success fw-semibold px-3 py-2 rounded-pill mb-2">Explainable AI</span>
+        <h2 class="display-6 fw-bold mb-3">No Black Boxes. Full Transparency.</h2>
+        <p class="text-muted">
+          Unlike opaque systems, SafePath AI explains exactly how every score was calculated so you can make informed decisions:
+        </p>
+        
+        <div class="d-flex flex-column gap-3 mt-4">
+          <div class="d-flex gap-3 align-items-start">
+            <div class="p-2 rounded-circle bg-primary-subtle text-primary fw-bold" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">1</div>
+            <div>
+              <h6 class="fw-bold mb-1">Route Corridor Analysis</h6>
+              <p class="text-muted small mb-0">Computes the exact shortest Haversine distance from every verified report to the route path within a 250m buffer.</p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 align-items-start">
+            <div class="p-2 rounded-circle bg-warning-subtle text-warning fw-bold" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">2</div>
+            <div>
+              <h6 class="fw-bold mb-1">Severity & Recency Weighting</h6>
+              <p class="text-muted small mb-0">High-severity concerns on the sidewalk carry greater weight than historical reports from a month ago.</p>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3 align-items-start">
+            <div class="p-2 rounded-circle bg-info-subtle text-info fw-bold" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">3</div>
+            <div>
+              <h6 class="fw-bold mb-1">Verified Community Consensus</h6>
+              <p class="text-muted small mb-0">Reports corroborated by multiple community confirmations or reviewed by moderators carry higher weight.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card p-4 rounded-4 shadow-sm border bg-light">
+          <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i>Example Route Evaluation</h5>
+          <div class="p-3 bg-white rounded-3 border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold">Route A (Main Boulevard)</span>
+              <span class="safety-score-pill score-low-risk"><i class="fa-solid fa-shield-heart"></i> 86.5 / 100</span>
+            </div>
+            <div class="small text-muted mb-2">Lower Reported Risk • 1.4 km • 18 min walking</div>
+            <div class="small text-muted border-top pt-2">
+              <span class="text-danger fw-semibold"><i class="fa-solid fa-minus me-1"></i>-13.5 pts:</span>
+              1 Medium-severity 'Broken Streetlight' located 42m away (Verified).
+            </div>
+          </div>
+
+          <div class="p-3 bg-white rounded-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold">Route B (Alley Shortcut)</span>
+              <span class="safety-score-pill score-high-risk"><i class="fa-solid fa-triangle-exclamation"></i> 44.0 / 100</span>
+            </div>
+            <div class="small text-muted mb-2">Higher Reported Risk • 1.1 km • 14 min walking</div>
+            <div class="small text-muted border-top pt-2">
+              <span class="text-danger fw-semibold"><i class="fa-solid fa-minus me-1"></i>-56.0 pts:</span>
+              2 High-severity 'Isolated Passage' & 'Suspicious Activity' reports within 30m.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

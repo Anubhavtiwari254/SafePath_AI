@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Center & SOS — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Disclaimer Notice -->
+  <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3 mb-4 rounded-3">
+    <i class="fa-solid fa-triangle-exclamation fs-3 text-warning"></i>
+    <div class="small">
+      <strong>Important Emergency Notice:</strong> SafePath AI provides peer location-sharing and resources. In an immediate life-threatening situation, always contact official local emergency services (Dial <strong>112</strong> / <strong>911</strong>) first.
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: SOS Workflow -->
+    <div class="col-lg-7">
+      <div class="card sp-card p-4 p-md-5 shadow-sm text-center mb-4">
+        <span class="badge bg-danger-subtle text-danger fw-bold px-3 py-2 rounded-pill mx-auto mb-3">
+          <i class="fa-solid fa-tower-broadcast me-1"></i>One-Touch Safety Response
+        </span>
+        <h2 class="fw-bold mb-2">Emergency SOS & Location Share</h2>
+        <p class="text-muted small mb-4">
+          Activate SOS to share your live GPS location link with your trusted contacts and responder networks.
+        </p>
+
+        <!-- Big SOS Trigger Button -->
+        <div class="my-3">
+          <button type="button" class="btn btn-danger-sos btn-lg rounded-circle" id="triggerSosBtn" style="width: 170px; height: 170px; font-size: 1.5rem; border: 6px solid rgba(255, 255, 255, 0.4);">
+            <i class="fa-solid fa-life-ring fa-bounce fs-1 d-block mb-1"></i>
+            <span class="fw-bold">ACTIVATE<br>SOS</span>
+          </button>
+        </div>
+        <p class="small text-muted mt-2">Press once to request location and initiate emergency dispatch.</p>
+
+        <!-- SOS Status Box -->
+        <div id="sosStatusBox" class="mt-4 p-4 rounded-4 bg-light border text-start d-none">
+          <!-- Step 1: Acquiring GPS -->
+          <div id="sosStepAcquiring" class="text-center py-3">
+            <div class="spinner-border text-danger mb-2" role="status"></div>
+            <h6 class="fw-bold text-danger mb-1">Acquiring GPS Coordinates...</h6>
+            <p class="small text-muted mb-0">Please grant browser location permissions if prompted.</p>
+          </div>
+
+          <!-- Step 2: 5-Second Countdown with Cancel -->
+          <div id="sosStepCountdown" class="text-center py-2 d-none">
+            <div class="fs-1 fw-bold text-danger mb-1" id="sosCountdownSeconds">5</div>
+            <h6 class="fw-bold text-dark mb-1">Broadcasting Emergency Location In...</h6>
+            <p class="small text-muted mb-2">Location: <span id="sosCoordsPreview" class="fw-bold">Acquiring...</span></p>
+            <button type="button" class="btn btn-sm btn-outline-dark px-4 py-2" id="cancelSosCountdownBtn">
+              <i class="fa-solid fa-xmark me-1"></i>Cancel SOS Now
+            </button>
+          </div>
+
+          <!-- Step 3: Active Emergency Share Created -->
+          <div id="sosStepActive" class="d-none">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+              <span class="fw-bold text-danger"><i class="fa-solid fa-circle-check text-success me-1"></i>Live Location Sharing Active</span>
+              <button class="btn btn-xs btn-outline-danger py-1" id="revokeActiveShareBtn">
+                <i class="fa-solid fa-ban me-1"></i>Revoke Link
+              </button>
+            </div>
+
+            <label class="form-label small fw-bold text-muted mb-1">Your Time-Limited Emergency Link:</label>
+            <div class="input-group mb-3">
+              <input type="text" id="sosShareUrlInput" class="form-control font-monospace small bg-white" readonly>
+              <button class="btn btn-outline-primary" type="button" onclick="copySosLink()" title="Copy to Clipboard">
+                <i class="fa-solid fa-copy me-1"></i>Copy
+              </button>
+            </div>
+
+            <!-- Quick Dispatch Channels -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <a href="#" id="sosWhatsappBtn" target="_blank" class="btn btn-sm btn-success flex-fill">
+                <i class="fa-brands fa-whatsapp me-1"></i>Send on WhatsApp
+              </a>
+              <a href="#" id="sosNativeSmsBtn" class="btn btn-sm btn-primary flex-fill">
+                <i class="fa-solid fa-comment-sms me-1"></i>Native SMS
+              </a>
+              <button type="button" id="sosWebShareBtn" class="btn btn-sm btn-secondary flex-fill d-none">
+                <i class="fa-solid fa-share-nodes me-1"></i>Device Share
+              </button>
+              <a href="#" id="sosViewActiveLinkBtn" target="_blank" class="btn btn-sm btn-outline-dark flex-fill">
+                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View Live Page
+              </a>
+            </div>
+
+            <!-- Delivery Summary -->
+            <div id="sosDeliveryNotice"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Message Customization Card -->
+      <div class="card sp-card p-3 shadow-sm">
+        <label class="form-label small fw-bold text-muted mb-1">
+          <i class="fa-solid fa-message me-1 text-primary"></i>Custom Emergency Message (Optional)
+        </label>
+        <input type="text" id="sosMessageInput" class="form-control" value="Emergency SOS activated. Please check my live location immediately." maxlength="250">
+        <div class="form-text small">This message is included in your shared SMS, WhatsApp, and emergency tracking page.</div>
+      </div>
+    </div>
+
+    <!-- Right Column: Trusted Contacts & Helplines -->
+    <div class="col-lg-5">
+      <!-- Trusted Contacts Box -->
+      <div class="card sp-card p-4 shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2"></i>Trusted Contacts</h5>
+          {% if current_user.is_authenticated %}
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+              <i class="fa-solid fa-plus me-1"></i>Add Contact
+            </button>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-secondary">Sign in to save</a>
+          {% endif %}
+        </div>
+
+        {% if current_user.is_authenticated %}
+          {% if contacts %}
+            <div class="list-group list-group-flush">
+              {% for c in contacts %}
+                <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center" id="contact-row-{{ c.id }}">
+                  <div>
+                    <strong class="d-block">{{ c.contact_name }}</strong>
+                    <span class="small text-muted"><i class="fa-solid fa-phone me-1"></i>{{ c.contact_value }}</span>
+                  </div>
+                  <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteTrustedContact({{ c.id }})" title="Remove contact">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted small mb-0 py-2">
+              You haven't configured any trusted contacts yet. Add your family, roommate, or campus escort to notify them during an emergency.
+            </p>
+          {% endif %}
+        {% else %}
+          <div class="p-3 bg-light rounded text-center small">
+            <i class="fa-solid fa-lock text-muted fs-4 d-block mb-1"></i>
+            <span class="text-muted">Create a free account to store and notify personal emergency contacts.</span>
+            <div class="mt-2">
+              <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-primary-teal">Register Free</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Local Emergency Helplines Directory -->
+      <div class="card sp-card p-4 shadow-sm">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-phone-volume text-danger me-2"></i>Emergency Helplines</h5>
+        <div class="list-group list-group-flush small">
+          {% for item in directory %}
+            <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="d-block text-dark">{{ item.service }}</strong>
+                <span class="text-muted" style="font-size: 0.8rem;">{{ item.desc }}</span>
+              </div>
+              <div>
+                <a href="tel:{{ item.number }}" class="btn btn-sm btn-danger text-nowrap fw-bold px-3">
+                  <i class="fa-solid fa-phone me-1"></i>{{ item.number }}
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div class="modal fade" id="addContactModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-primary me-2"></i>Add Trusted Contact</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="addContactForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Full Name / Relationship</label>
+            <input type="text" id="contactNameInput" class="form-control" placeholder="e.g. Sarah (Sister)" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Notification Channel</label>
+            <select id="contactMethodSelect" class="form-select">
+              <option value="phone" selected>Phone / SMS</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Phone Number or Email</label>
+            <input type="text" id="contactValueInput" class="form-control" placeholder="+1 (555) 000-0000" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary-teal">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/emergency.js') }}"></script>
+{% endblock %}

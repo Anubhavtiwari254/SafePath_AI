@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Alert — Live Location — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  {% if error %}
+    <div class="row justify-content-center">
+      <div class="col-lg-7 text-center py-5">
+        <div class="card sp-card p-5 border-0 shadow-lg">
+          <i class="fa-solid fa-circle-exclamation text-secondary fs-1 mb-3"></i>
+          <h3 class="fw-bold mb-2">Location Share Unavailable</h3>
+          <p class="text-muted lead mb-4">{{ error }}</p>
+          <a href="{{ url_for('main.index') }}" class="btn btn-primary-teal">SafePath AI Home</a>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- High Visibility Emergency Alert Banner -->
+    <div class="alert alert-danger border-0 shadow-sm p-4 rounded-4 mb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <span class="badge bg-danger text-white px-3 py-1 rounded-pill mb-2">
+            <i class="fa-solid fa-triangle-exclamation fa-bounce me-1"></i>ACTIVE EMERGENCY ALERT
+          </span>
+          <h2 class="fw-bold mb-1 text-danger">Emergency Location Shared</h2>
+          <p class="mb-0 text-dark">
+            <strong>Message:</strong> "{{ share.message }}"
+          </p>
+        </div>
+        <div class="text-md-end">
+          <a href="https://www.google.com/maps/dir/?api=1&destination={{ share.current_lat }},{{ share.current_lng }}" target="_blank" class="btn btn-danger btn-lg shadow">
+            <i class="fa-solid fa-diamond-turn-right me-2"></i>Navigate to Location
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Live Map Display -->
+      <div class="col-lg-8">
+        <div class="card sp-card p-2 shadow-sm" style="min-height: 520px;">
+          <div id="emergencyViewMap" style="min-height: 520px; width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Responder Info Card -->
+      <div class="col-lg-4">
+        <div class="card sp-card p-4 shadow-sm mb-3">
+          <h5 class="fw-bold mb-3"><i class="fa-solid fa-location-crosshairs text-primary me-2"></i>Location Details</h5>
+          
+          <div class="mb-3">
+            <span class="text-muted small d-block">Approximate Address:</span>
+            <strong class="text-dark">{{ approx_address }}</strong>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Coordinates:</span>
+            <span class="font-monospace small bg-light p-1 rounded">{{ share.current_lat }}, {{ share.current_lng }}</span>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Reported Time:</span>
+            <span><i class="fa-regular fa-clock me-1 text-muted"></i>{{ share.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') if share.created_at else 'Recent' }}</span>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Share Link Expiry:</span>
+            <span class="badge bg-warning text-dark"><i class="fa-regular fa-hourglass-half me-1"></i>Time-Limited Active Session</span>
+          </div>
+
+          <div class="border-top pt-3">
+            <a href="tel:112" class="btn btn-outline-danger w-100 fw-bold py-2 mb-2">
+              <i class="fa-solid fa-phone-volume me-2"></i>Call Emergency Dispatch (112)
+            </a>
+            <a href="tel:911" class="btn btn-outline-secondary w-100 small py-1">
+              Call Alternate (911)
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if not error and share %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const lat = {{ share.current_lat }};
+    const lng = {{ share.current_lng }};
+    const accuracy = {{ share.accuracy_meters or 50 }};
+
+    const map = initBaseMap("emergencyViewMap", lat, lng, 16);
+
+    // Add Beacon Marker
+    const beaconIcon = L.divIcon({
+      className: "beacon-pin",
+      html: `
+        <div style="position: relative;">
+          <div style="width: 24px; height: 24px; background: #DC2626; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(220,38,38,0.8); animation: pulse-sos 1.5s infinite;"></div>
+        </div>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    L.marker([lat, lng], { icon: beaconIcon })
+      .bindPopup("<strong>User Emergency Beacon</strong><br>{{ approx_address }}")
+      .addTo(map)
+      .openPopup();
+
+    // Accuracy Circle
+    L.circle([lat, lng], {
+      radius: accuracy,
+      color: "#DC2626",
+      fillColor: "#DC2626",
+      fillOpacity: 0.15,
+      weight: 1
+    }).addTo(map);
+  });
+</script>
+{% endif %}
+{% endblock %}

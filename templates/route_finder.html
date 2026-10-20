@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Safe Route Finder — SafePath AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-lg-4">
+  <div class="row g-4">
+    <!-- Left Column: Search & Route Comparison -->
+    <div class="col-lg-5 col-xl-4">
+      <div class="card sp-card p-4 shadow-sm mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h4 class="fw-bold mb-0"><i class="fa-solid fa-route text-primary me-2"></i>Safe Route Finder</h4>
+          <span class="badge bg-primary-subtle text-primary">Corridor Safety AI</span>
+        </div>
+
+        <form id="routeSearchForm">
+          <!-- Starting Point -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">
+              <i class="fa-solid fa-play text-success me-1"></i>Starting Location
+            </label>
+            <div class="input-group">
+              <input type="text" id="originInput" class="form-control" placeholder="Address, landmark or coords" value="Central Station" required>
+              <button class="btn btn-outline-secondary" type="button" id="useCurrentLocationBtn" title="Use Current GPS Location">
+                <i class="fa-solid fa-location-crosshairs text-primary"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Destination -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted mb-1">
+              <i class="fa-solid fa-flag-checkered text-danger me-1"></i>Destination
+            </label>
+            <input type="text" id="destInput" class="form-control" placeholder="Address, landmark or coords" value="India Gate" required>
+          </div>
+
+          <!-- Travel Mode & Preference -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-person-walking me-1"></i>Mode</label>
+              <select id="travelModeSelect" class="form-select">
+                <option value="walking" selected>Walking</option>
+                <option value="cycling">Cycling</option>
+                <option value="driving">Driving</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-sliders me-1"></i>Preference</label>
+              <select id="preferenceSelect" class="form-select">
+                <option value="safest" selected>Safest Route</option>
+                <option value="balanced">Balanced</option>
+                <option value="fastest">Fastest</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-grid mb-2">
+            <button type="submit" class="btn btn-primary-teal py-2">
+              <i class="fa-solid fa-compass me-2"></i>Find & Score Routes
+            </button>
+          </div>
+        </form>
+
+        <!-- Demo Shortcuts -->
+        <div class="pt-2 border-top mt-2">
+          <span class="small text-muted fw-semibold d-block mb-1">Try instant demo searches:</span>
+          <div class="d-flex flex-wrap gap-1">
+            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="loadDemoRoute('Central Station', 'India Gate')">
+              Delhi: Station &rarr; India Gate
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="loadDemoRoute('Connaught Place', 'Delhi University')">
+              Delhi: CP &rarr; University
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="loadDemoRoute('Times Square', 'Central Park')">
+              NYC: Times Sq &rarr; Central Park
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Cards Container -->
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+          <h5 class="fw-bold mb-0">Route Comparison</h5>
+          <span class="text-muted small">Select a card to inspect</span>
+        </div>
+
+        <div id="routeLoadingIndicator" class="text-center py-4 d-none">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="text-muted small mt-2">Analyzing route corridors and community hazard reports...</p>
+        </div>
+
+        <div id="routeResultsContainer">
+          <!-- Filled dynamically by route_finder.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Leaflet Map -->
+    <div class="col-lg-7 col-xl-8">
+      <div class="card sp-card p-2 shadow-sm h-100" style="min-height: 600px;">
+        <div class="position-relative w-100 h-100">
+          <div id="routeMap" style="min-height: 600px; height: 100%;"></div>
+
+          <!-- Map Legend Overlay -->
+          <div class="position-absolute bottom-0 start-0 m-3 p-3 bg-white bg-opacity-95 rounded-3 shadow border small z-index-1" style="max-width: 280px; z-index: 1000;">
+            <div class="fw-bold mb-2"><i class="fa-solid fa-layer-group me-1 text-primary"></i>Map Legend</div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span style="display:inline-block; width:16px; height:5px; background:#06D6A0; border-radius:3px;"></span>
+              <span>Safest / Selected Route</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span style="display:inline-block; width:16px; height:5px; background:#48CAE4; border-radius:3px;"></span>
+              <span>Alternative Route</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <div class="custom-hazard-pin" style="width:18px; height:18px; font-size:10px; background:#F59E0B;">
+                <i class="fa-solid fa-lightbulb"></i>
+              </div>
+              <span>Reported Hazard in Corridor</span>
+            </div>
+            <div class="small text-muted mt-2 border-top pt-1">
+              Corridor evaluates hazards within 250m.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/route_finder.js') }}"></script>
+{% endblock %}

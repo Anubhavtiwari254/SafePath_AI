@@ -11,16 +11,25 @@ class Config:
 
     SECRET_KEY = os.getenv("SECRET_KEY", "safepath-insecure-dev-secret-key-change-me")
     
-    # Database
-    db_url = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'safepath.db'}")
+    # Database: Use DATABASE_URL if provided (e.g. Supabase, Neon Postgres),
+    # otherwise fallback to /tmp on Vercel or local sqlite file for local dev.
+    db_url = os.getenv("DATABASE_URL", "").strip()
+    if not db_url:
+        if os.getenv("VERCEL"):
+            db_url = "sqlite:////tmp/safepath.db"
+        else:
+            db_url = f"sqlite:///{BASE_DIR / 'safepath.db'}"
     # Handle older postgres:// format for SQLAlchemy compatibility
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Upload configuration
-    UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
+    # Upload configuration: Vercel serverless filesystem is read-only except /tmp
+    if os.getenv("VERCEL"):
+        UPLOAD_FOLDER = Path("/tmp") / "uploads"
+    else:
+        UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 5 * 1024 * 1024))  # 5MB max
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
     

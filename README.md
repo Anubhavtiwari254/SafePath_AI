@@ -184,6 +184,25 @@ Open your web browser and navigate to:
 
 ---
 
+## ⚡ Deploying to Vercel
+
+SafePath AI includes complete, production-ready configuration for **Vercel** serverless deployment via `vercel.json` and `api/index.py`.
+
+### 1-Click Import Method:
+1. Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
+2. Click **"Add New..."** &rarr; **"Project"**.
+3. Select your repository: **`Anubhavtiwari254/SafePath_AI`**.
+4. In the Project Configuration:
+   - **Framework Preset:** Leave as *Other*.
+   - **Root Directory:** `./`
+5. *(Optional)* Add Environment Variables in the Vercel Dashboard:
+   - `SECRET_KEY`: Set to any secure random string.
+   - `DATABASE_URL`: *(Optional)* Any PostgreSQL database URI (e.g. Supabase, Neon, Railway). If omitted, SafePath AI automatically uses `/tmp/safepath.db` with auto-seeded demonstration hazards.
+   - `SMS_PROVIDER`: `mock` (or `twilio` if you have Twilio credentials).
+6. Click **Deploy**. Vercel will install dependencies from `requirements.txt` and launch your live application with a global HTTPS URL!
+
+---
+
 ## 🔑 Pre-Configured Demonstration Accounts
 
 | Role | Email | Password | Features Accessible |

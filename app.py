@@ -13,7 +13,10 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Ensure upload directory exists
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    try:
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    except Exception as e:
+        app.logger.warning("Upload folder creation warning: %s", e)
 
     # Initialize extensions
     db.init_app(app)
@@ -36,6 +39,12 @@ def create_app(config_class=Config):
     app.register_blueprint(hazards_bp)
     app.register_blueprint(emergency_bp)
     app.register_blueprint(admin_bp)
+
+    # Route to serve uploads (compatible with both local static/uploads and Vercel /tmp/uploads)
+    @app.route("/static/uploads/<path:filename>")
+    def serve_uploaded_file(filename):
+        from flask import send_from_directory
+        return send_from_directory(str(app.config["UPLOAD_FOLDER"]), filename)
 
     # Global context processors for templates
     @app.context_processor
@@ -64,10 +73,13 @@ def create_app(config_class=Config):
 
     # Auto-initialize database tables and demo seed data if needed
     with app.app_context():
-        db.create_all()
-        # Seed if empty
-        if User.query.count() == 0:
-            seed_database(app)
+        try:
+            db.create_all()
+            # Seed if empty
+            if User.query.count() == 0:
+                seed_database(app)
+        except Exception as e:
+            app.logger.warning("Database initialization notice: %s", e)
 
     # CLI command to manually re-seed
     @app.cli.command("seed")
